@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaiizen - Ficha Técnica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f8f6f3;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #8b8b4b;
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: 300;
+            color: #8b8b4b;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .coffee-name {
+            font-size: 24px;
+            color: #666;
+            font-weight: 400;
+            margin-top: 10px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #8b8b4b;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .traceability-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .trace-item {
+            background: #f8f6f3;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #8b8b4b;
+        }
+
+        .trace-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #8b8b4b;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .trace-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 400;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .radar-chart {
+            width: 400px;
+            height: 400px;
+            max-width: 100%;
+        }
+
+        .profile-section {
+            background: #f8f6f3;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .profile-text {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.8;
+            font-style: italic;
+        }
+
+        .editable {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .editable:hover {
+            background-color: #e8e6e3;
+        }
+
+        .edit-mode {
+            background-color: #fff;
+            border: 2px solid #8b8b4b;
+            padding: 5px;
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+
+        .edit-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            border: 1px solid #ddd;
+        }
+
+        .edit-toggle {
+            background: #8b8b4b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .chart-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .chart-input-container {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .chart-input {
+            width: 50px;
+            padding: 2px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .auth-container {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .auth-button {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 100%;
+        }
+
+        .authenticated {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .logo {
+                font-size: 36px;
+            }
+            
+            .coffee-name {
+                font-size: 18px;
+            }
+            
+            .traceability-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .radar-chart {
+                width: 300px;
+                height: 300px;
+            }
+
+            .edit-panel {
+                top: 10px;
+                right: 10px;
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Kaiizen</div>
+            <div class="coffee-name editable" data-field="coffee-name">Nombre del Café</div>
+        </div>
+
+        <!-- Trazabilidad -->
+        <div class="section">
+            <h2 class="section-title">Trazabilidad</h2>
+            <div class="traceability-grid">
+                <div class="trace-item">
+                    <div class="trace-label">Caficultor</div>
+                    <div class="trace-value editable" data-field="farmer">Nombre del Caficultor</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Finca</div>
+                    <div class="trace-value editable" data-field="farm">Nombre de la Finca</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Ubicación</div>
+                    <div class="trace-value editable" data-field="location">Departamento, Colombia</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Altitud</div>
+                    <div class="trace-value editable" data-field="altitude">1,800 m.s.n.m</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Variedad</div>
+                    <div class="trace-value editable" data-field="variety">Caturra</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Beneficio</div>
+                    <div class="trace-value editable" data-field="process">Lavado - 48 horas</div>
+                </div>
+                <div class="trace-item">
+                    <div class="trace-label">Fecha de Recolección</div>
+                    <div class="trace-value editable" data-field="harvest-date">Octubre 2024</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Telaraña -->
+        <div class="section">
+            <h2 class="section-title">Perfil Sensorial</h2>
+            <div class="chart-container">
+                <canvas class="radar-chart" id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Perfil de Taza -->
+        <div class="section">
+            <h2 class="section-title">Perfil de Taza Esperado</h2>
+            <div class="profile-section">
+                <div class="profile-text editable" data-field="cup-profile">
+                    Un café con notas a chocolate y caramelo, cuerpo medio y acidez balanceada. 
+                    Se perciben sutiles notas florales con un retrogusto limpio y dulce que invita 
+                    a continuar disfrutando de cada sorbo.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Edición Seguro -->
+    <div class="edit-panel">
+        <!-- Sistema de Autenticación -->
+        <div id="authSection" class="auth-container">
+            <input type="password" id="passwordInput" class="auth-input" placeholder="Contraseña de Edición">
+            <button class="auth-button" onclick="authenticate()">Acceder</button>
+        </div>
+        
+        <!-- Controles de Edición (solo visibles después de autenticarse) -->
+        <div id="editSection" class="authenticated">
+            <button class="edit-toggle" onclick="toggleEditMode()">Modo Edición</button>
+            <div id="chartControls" class="chart-controls" style="display: none;">
+                <div class="chart-input-container">
+                    <span>Fragancia/Aroma:</span>
+                    <input type="range" min="1" max="10" value="7" class="chart-input" id="fragancia" onchange="updateChart()">
+                    <span id="fragancia-value">7</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Sabor:</span>
+                    <input type="range" min="1" max="10" value="8" class="chart-input" id="sabor" onchange="updateChart()">
+                    <span id="sabor-value">8</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Post-gusto:</span>
+                    <input type="range" min="1" max="10" value="7" class="chart-input" id="postgusto" onchange="updateChart()">
+                    <span id="postgusto-value">7</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Acidez:</span>
+                    <input type="range" min="1" max="10" value="6" class="chart-input" id="acidez" onchange="updateChart()">
+                    <span id="acidez-value">6</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Cuerpo:</span>
+                    <input type="range" min="1" max="10" value="7" class="chart-input" id="cuerpo" onchange="updateChart()">
+                    <span id="cuerpo-value">7</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Balance:</span>
+                    <input type="range" min="1" max="10" value="8" class="chart-input" id="balance" onchange="updateChart()">
+                    <span id="balance-value">8</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Uniformidad:</span>
+                    <input type="range" min="1" max="10" value="9" class="chart-input" id="uniformidad" onchange="updateChart()">
+                    <span id="uniformidad-value">9</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Taza Limpia:</span>
+                    <input type="range" min="1" max="10" value="8" class="chart-input" id="tazalimpia" onchange="updateChart()">
+                    <span id="tazalimpia-value">8</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Dulzura:</span>
+                    <input type="range" min="1" max="10" value="7" class="chart-input" id="dulzura" onchange="updateChart()">
+                    <span id="dulzura-value">7</span>
+                </div>
+                <div class="chart-input-container">
+                    <span>Overall:</span>
+                    <input type="range" min="1" max="10" value="8" class="chart-input" id="overall" onchange="updateChart()">
+                    <span id="overall-value">8</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editMode = false;
+        let authenticated = false;
+
+        // Contraseña para edición (cambiar por una más segura)
+        const EDIT_PASSWORD = "kaiizen2025";
+
+        // Datos del gráfico de telaraña
+        const chartData = {
+            labels: ['Fragancia/Aroma', 'Sabor', 'Post-gusto', 'Acidez', 'Cuerpo', 'Balance', 'Uniformidad', 'Taza Limpia', 'Dulzura', 'Overall'],
+            values: [7, 8, 7, 6, 7, 8, 9, 8, 7, 8]
+        };
+
+        function authenticate() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === EDIT_PASSWORD) {
+                authenticated = true;
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('editSection').style.display = 'block';
+                alert('Acceso autorizado. Ya puedes editar la ficha técnica.');
+            } else {
+                alert('Contraseña incorrecta.');
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        function toggleEditMode() {
+            if (!authenticated) return;
+            
+            editMode = !editMode;
+            const button = document.querySelector('.edit-toggle');
+            const controls = document.getElementById('chartControls');
+            
+            if (editMode) {
+                button.textContent = 'Guardar Cambios';
+                controls.style.display = 'block';
+                enableEditing();
+            } else {
+                button.textContent = 'Modo Edición';
+                controls.style.display = 'none';
+                disableEditing();
+            }
+        }
+
+        function enableEditing() {
+            document.querySelectorAll('.editable').forEach(element => {
+                element.addEventListener('click', makeEditable);
+                element.style.outline = '1px dashed #8b8b4b';
+                element.style.outlineOffset = '2px';
+            });
+        }
+
+        function disableEditing() {
+            document.querySelectorAll('.editable').forEach(element => {
+                element.removeEventListener('click', makeEditable);
+                element.style.outline = 'none';
+            });
+        }
+
+        function makeEditable(e) {
+            if (!editMode) return;
+            
+            const element = e.target;
+            const currentText = element.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.className = 'edit-mode';
+            
+            input.addEventListener('blur', function() {
+                element.textContent = this.value;
+                element.style.display = 'block';
+                this.remove();
+            });
+            
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            });
+            
+            element.style.display = 'none';
+            element.parentNode.insertBefore(input, element.nextSibling);
+            input.focus();
+        }
+
+        function updateChart() {
+            chartData.values = [
+                parseInt(document.getElementById('fragancia').value),
+                parseInt(document.getElementById('sabor').value),
+                parseInt(document.getElementById('postgusto').value),
+                parseInt(document.getElementById('acidez').value),
+                parseInt(document.getElementById('cuerpo').value),
+                parseInt(document.getElementById('balance').value),
+                parseInt(document.getElementById('uniformidad').value),
+                parseInt(document.getElementById('tazalimpia').value),
+                parseInt(document.getElementById('dulzura').value),
+                parseInt(document.getElementById('overall').value)
+            ];
+            
+            // Actualizar valores mostrados
+            document.getElementById('fragancia-value').textContent = chartData.values[0];
+            document.getElementById('sabor-value').textContent = chartData.values[1];
+            document.getElementById('postgusto-value').textContent = chartData.values[2];
+            document.getElementById('acidez-value').textContent = chartData.values[3];
+            document.getElementById('cuerpo-value').textContent = chartData.values[4];
+            document.getElementById('balance-value').textContent = chartData.values[5];
+            document.getElementById('uniformidad-value').textContent = chartData.values[6];
+            document.getElementById('tazalimpia-value').textContent = chartData.values[7];
+            document.getElementById('dulzura-value').textContent = chartData.values[8];
+            document.getElementById('overall-value').textContent = chartData.values[9];
+            
+            drawRadarChart();
+        }
+
+        function drawRadarChart() {
+            const canvas = document.getElementById('radarChart');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 60;
+
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar círculos concéntricos
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let i = 1; i <= 5; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, (radius / 5) * i, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+
+            // Dibujar líneas radiales y etiquetas
+            const angleStep = (2 * Math.PI) / chartData.labels.length;
+            
+            for (let i = 0; i < chartData.labels.length; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+
+                // Línea radial
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = '#ddd';
+                ctx.stroke();
+
+                // Etiquetas
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Georgia';
+                ctx.textAlign = 'center';
+                
+                const labelX = centerX + (radius + 20) * Math.cos(angle);
+                const labelY = centerY + (radius + 20) * Math.sin(angle);
+                
+                const label = chartData.labels[i];
+                if (label.length > 10) {
+                    const words = label.split(' ');
+                    ctx.fillText(words[0], labelX, labelY - 5);
+                    if (words[1]) ctx.fillText(words[1], labelX, labelY + 10);
+                } else {
+                    ctx.fillText(label, labelX, labelY);
+                }
+            }
+
+            // Dibujar área del perfil
+            ctx.beginPath();
+            for (let i = 0; i < chartData.values.length; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const value = chartData.values[i];
+                const distance = (value / 10) * radius;
+                const x = centerX + distance * Math.cos(angle);
+                const y = centerY + distance * Math.sin(angle);
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(139, 139, 75, 0.3)';
+            ctx.fill();
+            ctx.strokeStyle = '#8b8b4b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Dibujar puntos
+            for (let i = 0; i < chartData.values.length; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const value = chartData.values[i];
+                const distance = (value / 10) * radius;
+                const x = centerX + distance * Math.cos(angle);
+                const y = centerY + distance * Math.sin(angle);
+
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = '#8b8b4b';
+                ctx.fill();
+            }
+        }
+
+        // Permitir Enter en el campo de contraseña
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    authenticate();
+                }
+            });
+        });
+
+        // Configurar canvas y dibujar gráfico inicial
+        window.addEventListener('load', function() {
+            const canvas = document.getElementById('radarChart');
+            canvas.width = 400;
+            canvas.height = 400;
+            drawRadarChart();
+        });
+    </script>
+</body>
+</html>
