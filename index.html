@@ -118,6 +118,7 @@
         .editable {
             cursor: pointer;
             transition: background-color 0.3s ease;
+            min-height: 1.2em;
         }
 
         .editable:hover {
@@ -143,6 +144,8 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
             border: 1px solid #ddd;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .edit-toggle {
@@ -154,6 +157,30 @@
             cursor: pointer;
             font-size: 14px;
             width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .save-permanent-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .loading-indicator {
+            background: #2196F3;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+            display: none;
         }
 
         .chart-controls {
@@ -232,6 +259,7 @@
                 top: 10px;
                 right: 10px;
                 width: 200px;
+                max-height: 80vh;
             }
         }
     </style>
@@ -241,7 +269,7 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">Kaiizen</div>
-            <div class="coffee-name editable" data-field="coffee-name">Nombre del Café</div>
+            <div class="coffee-name editable" data-field="coffeeName">Cargando...</div>
         </div>
 
         <!-- Trazabilidad -->
@@ -250,31 +278,31 @@
             <div class="traceability-grid">
                 <div class="trace-item">
                     <div class="trace-label">Caficultor</div>
-                    <div class="trace-value editable" data-field="farmer">Nombre del Caficultor</div>
+                    <div class="trace-value editable" data-field="farmer">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Finca</div>
-                    <div class="trace-value editable" data-field="farm">Nombre de la Finca</div>
+                    <div class="trace-value editable" data-field="farm">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Ubicación</div>
-                    <div class="trace-value editable" data-field="location">Departamento, Colombia</div>
+                    <div class="trace-value editable" data-field="location">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Altitud</div>
-                    <div class="trace-value editable" data-field="altitude">1,800 m.s.n.m</div>
+                    <div class="trace-value editable" data-field="altitude">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Variedad</div>
-                    <div class="trace-value editable" data-field="variety">Caturra</div>
+                    <div class="trace-value editable" data-field="variety">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Beneficio</div>
-                    <div class="trace-value editable" data-field="process">Lavado - 48 horas</div>
+                    <div class="trace-value editable" data-field="process">Cargando...</div>
                 </div>
                 <div class="trace-item">
                     <div class="trace-label">Fecha de Recolección</div>
-                    <div class="trace-value editable" data-field="harvest-date">Octubre 2024</div>
+                    <div class="trace-value editable" data-field="harvestDate">Cargando...</div>
                 </div>
             </div>
         </div>
@@ -291,10 +319,8 @@
         <div class="section">
             <h2 class="section-title">Perfil de Taza Esperado</h2>
             <div class="profile-section">
-                <div class="profile-text editable" data-field="cup-profile">
-                    Un café con notas a chocolate y caramelo, cuerpo medio y acidez balanceada. 
-                    Se perciben sutiles notas florales con un retrogusto limpio y dulce que invita 
-                    a continuar disfrutando de cada sorbo.
+                <div class="profile-text editable" data-field="cupProfile">
+                    Cargando perfil de taza...
                 </div>
             </div>
         </div>
@@ -310,7 +336,9 @@
         
         <!-- Controles de Edición (solo visibles después de autenticarse) -->
         <div id="editSection" class="authenticated">
+            <div class="loading-indicator" id="loadingIndicator">Cargando...</div>
             <button class="edit-toggle" onclick="toggleEditMode()">Modo Edición</button>
+            <button class="save-permanent-btn" onclick="savePermanently()" style="display: none;" id="saveBtn">💾 Guardar Permanentemente</button>
             <div id="chartControls" class="chart-controls" style="display: none;">
                 <div class="chart-input-container">
                     <span>Fragancia/Aroma:</span>
@@ -366,11 +394,42 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHqqCGqYDR37QD30G-jURIf1EgW1LIhZ8",
+            authDomain: "kaiizen-cafe-ficha-marlon-b.firebaseapp.com",
+            projectId: "kaiizen-cafe-ficha-marlon-b",
+            storageBucket: "kaiizen-cafe-ficha-marlon-b.firebasestorage.app",
+            messagingSenderId: "1055411680783",
+            appId: "1:1055411680783:web:59adfe2acf6d452820d57a"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase functions available globally
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.firebaseReady = true;
+
+        // Load data when Firebase is ready
+        setTimeout(loadDataFromFirebase, 1000);
+    </script>
+
     <script>
         let editMode = false;
         let authenticated = false;
 
-        // Contraseña para edición (cambiar por una más segura)
+        // Contraseña para edición
         const EDIT_PASSWORD = "kaiizen2025";
 
         // Datos del gráfico de telaraña
@@ -378,6 +437,131 @@
             labels: ['Fragancia/Aroma', 'Sabor', 'Post-gusto', 'Acidez', 'Cuerpo', 'Balance', 'Uniformidad', 'Taza Limpia', 'Dulzura', 'Overall'],
             values: [7, 8, 7, 6, 7, 8, 9, 8, 7, 8]
         };
+
+        // Datos de la ficha
+        const defaultData = {
+            coffeeName: "Nombre del Café",
+            farmer: "Nombre del Caficultor",
+            farm: "Nombre de la Finca",
+            location: "Departamento, Colombia",
+            altitude: "1,800 m.s.n.m",
+            variety: "Caturra",
+            process: "Lavado - 48 horas",
+            harvestDate: "Octubre 2024",
+            cupProfile: "Un café con notas a chocolate y caramelo, cuerpo medio y acidez balanceada. Se perciben sutiles notas florales con un retrogusto limpio y dulce que invita a continuar disfrutando de cada sorbo.",
+            chartValues: [7, 8, 7, 6, 7, 8, 9, 8, 7, 8]
+        };
+
+        async function loadDataFromFirebase() {
+            if (!window.firebaseReady) {
+                setTimeout(loadDataFromFirebase, 500);
+                return;
+            }
+
+            try {
+                const docRef = window.doc(window.db, "cafe-data", "ficha-principal");
+                const docSnap = await window.getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("Datos cargados desde Firebase:", data);
+                    
+                    // Actualizar todos los campos con datos de Firebase o valores por defecto
+                    const finalData = { ...defaultData, ...data };
+                    
+                    // Actualizar elementos de la página
+                    Object.keys(finalData).forEach(field => {
+                        if (field === 'chartValues') {
+                            chartData.values = finalData[field];
+                            updateChartControls();
+                            drawRadarChart();
+                        } else {
+                            const element = document.querySelector(`[data-field="${field}"]`);
+                            if (element) {
+                                element.textContent = finalData[field];
+                            }
+                        }
+                    });
+                } else {
+                    console.log("No hay datos en Firebase, usando valores por defecto");
+                    // Inicializar con datos por defecto
+                    await saveDataToFirebase(defaultData);
+                    loadDefaultData();
+                }
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                loadDefaultData();
+            }
+        }
+
+        function loadDefaultData() {
+            Object.keys(defaultData).forEach(field => {
+                if (field === 'chartValues') {
+                    chartData.values = defaultData[field];
+                    updateChartControls();
+                    drawRadarChart();
+                } else {
+                    const element = document.querySelector(`[data-field="${field}"]`);
+                    if (element) {
+                        element.textContent = defaultData[field];
+                    }
+                }
+            });
+        }
+
+        async function saveDataToFirebase(data) {
+            if (!window.firebaseReady) {
+                alert("Firebase no está listo. Intenta de nuevo en unos segundos.");
+                return;
+            }
+
+            try {
+                const docRef = window.doc(window.db, "cafe-data", "ficha-principal");
+                await window.setDoc(docRef, data);
+                return true;
+            } catch (error) {
+                console.error("Error guardando datos:", error);
+                alert("Error guardando datos: " + error.message);
+                return false;
+            }
+        }
+
+        async function savePermanently() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.style.display = 'block';
+            loadingIndicator.textContent = 'Guardando...';
+
+            // Recopilar todos los datos actuales
+            const currentData = {};
+            
+            // Datos de texto
+            document.querySelectorAll('[data-field]').forEach(element => {
+                const field = element.getAttribute('data-field');
+                currentData[field] = element.textContent.trim();
+            });
+            
+            // Datos del gráfico
+            currentData.chartValues = [...chartData.values];
+
+            // Guardar en Firebase
+            const success = await saveDataToFirebase(currentData);
+            
+            if (success) {
+                loadingIndicator.textContent = '✅ ¡Guardado exitosamente!';
+                loadingIndicator.style.background = '#4CAF50';
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    loadingIndicator.style.background = '#2196F3';
+                }, 2000);
+            } else {
+                loadingIndicator.textContent = '❌ Error al guardar';
+                loadingIndicator.style.background = '#f44336';
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    loadingIndicator.style.background = '#2196F3';
+                }, 3000);
+            }
+        }
 
         function authenticate() {
             const password = document.getElementById('passwordInput').value;
@@ -398,14 +582,17 @@
             editMode = !editMode;
             const button = document.querySelector('.edit-toggle');
             const controls = document.getElementById('chartControls');
+            const saveBtn = document.getElementById('saveBtn');
             
             if (editMode) {
-                button.textContent = 'Guardar Cambios';
+                button.textContent = 'Salir de Edición';
                 controls.style.display = 'block';
+                saveBtn.style.display = 'block';
                 enableEditing();
             } else {
                 button.textContent = 'Modo Edición';
                 controls.style.display = 'none';
+                saveBtn.style.display = 'none';
                 disableEditing();
             }
         }
@@ -467,7 +654,26 @@
                 parseInt(document.getElementById('overall').value)
             ];
             
-            // Actualizar valores mostrados
+            updateChartControlsValues();
+            drawRadarChart();
+        }
+
+        function updateChartControls() {
+            document.getElementById('fragancia').value = chartData.values[0];
+            document.getElementById('sabor').value = chartData.values[1];
+            document.getElementById('postgusto').value = chartData.values[2];
+            document.getElementById('acidez').value = chartData.values[3];
+            document.getElementById('cuerpo').value = chartData.values[4];
+            document.getElementById('balance').value = chartData.values[5];
+            document.getElementById('uniformidad').value = chartData.values[6];
+            document.getElementById('tazalimpia').value = chartData.values[7];
+            document.getElementById('dulzura').value = chartData.values[8];
+            document.getElementById('overall').value = chartData.values[9];
+            
+            updateChartControlsValues();
+        }
+
+        function updateChartControlsValues() {
             document.getElementById('fragancia-value').textContent = chartData.values[0];
             document.getElementById('sabor-value').textContent = chartData.values[1];
             document.getElementById('postgusto-value').textContent = chartData.values[2];
@@ -478,8 +684,6 @@
             document.getElementById('tazalimpia-value').textContent = chartData.values[7];
             document.getElementById('dulzura-value').textContent = chartData.values[8];
             document.getElementById('overall-value').textContent = chartData.values[9];
-            
-            drawRadarChart();
         }
 
         function drawRadarChart() {
